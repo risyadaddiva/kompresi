@@ -5,8 +5,7 @@ import subprocess
 import io
 import os
 import numpy as np
-import cv2      
-import base64
+import cv2
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -86,44 +85,12 @@ def compress_video():
 def download_file(filename):
     return send_file(os.path.join(UPLOAD_FOLDER, filename), as_attachment=True)
 
-@app.route('/stego', methods=['GET', 'POST'])
-def stego():
-    result = None
-    if request.method == 'POST':
-        file = request.files['image']
-        message = request.form['message']
-        if file and message:
-            # Load image
-            image_np = np.frombuffer(file.read(), np.uint8)
-            image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+x
 
-            # Apply DCT
-            gray_float = np.float32(gray)
-            dct = cv2.dct(gray_float)
-
-            # Encode message into dct coefficients
-            message_bin = ''.join([format(ord(c), '08b') for c in message])
-            flat = dct.flatten()
-            for i in range(len(message_bin)):
-                flat[i] = flat[i] - (int(flat[i]) % 2) + int(message_bin[i])
-            encoded_dct = flat.reshape(dct.shape)
-
-            # Apply inverse DCT
-            encoded_img = cv2.idct(encoded_dct)
-            encoded_img = np.uint8(encoded_img)
-            color_encoded = cv2.merge((encoded_img, encoded_img, encoded_img))
-            _, buffer = cv2.imencode('.png', color_encoded)
-            output_path = os.path.join('uploads', 'stego_image.png')
-            with open(output_path, 'wb') as f:
-                f.write(buffer.tobytes())
-            session['stego'] = True
-            result = True
-    return render_template('stego.html', result=result)
 
 @app.route('/download_stego')
 def download_stego():
-    return send_file(os.path.join('uploads', 'stego_image.png'), as_attachment=True)
+    return send_file(os.path.join(UPLOAD_FOLDER, 'stego_image.png'), as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
